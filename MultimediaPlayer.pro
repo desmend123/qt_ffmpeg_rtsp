@@ -10,10 +10,12 @@ CONFIG += c++17
 
 SOURCES += \
     main.cpp \
-    mainwindow.cpp
+    mainwindow.cpp \
+    openmedia.cpp
 
 HEADERS += \
-    mainwindow.h
+    mainwindow.h \
+    openmedia.h
 
 FORMS += \
     mainwindow.ui \

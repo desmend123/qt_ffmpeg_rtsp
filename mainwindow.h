@@ -2,11 +2,11 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include "openmedia.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
 class MainWindow;
-class OpenMedia;
 }
 QT_END_NAMESPACE
 
@@ -22,9 +22,8 @@ private slots:
     void onOpenNetStreamTriggered();
 
 private:
-    QSharedPointer<QWidget> OpenMedia{nullptr};
+    QSharedPointer<OpenMedia> m_openMedia{nullptr};
 
-    Ui::MainWindow *ui;
-    Ui::OpenMedia *om_ui;
+    Ui::MainWindow *m_ui;
 };
 #endif // MAINWINDOW_H

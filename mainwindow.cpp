@@ -1,24 +1,22 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include "ui_openmedia.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
-    , ui(new Ui::MainWindow)
+    , m_ui(new Ui::MainWindow)
 {
-    ui->setupUi(this);
+    m_ui->setupUi(this);
 
-    connect(ui->openNetStream, SIGNAL(triggered()), this,
+    connect(m_ui->openNetStream, SIGNAL(triggered()), this,
             SLOT(onOpenNetStreamTriggered()));
 }
 
 MainWindow::~MainWindow()
 {
-    delete ui;
+    delete m_ui;
 }
 
 void MainWindow::onOpenNetStreamTriggered() {
-    OpenMedia = QSharedPointer<QWidget>::create();
-    om_ui->setupUi(OpenMedia.data());
-    OpenMedia->show();
+    m_openMedia = QSharedPointer<OpenMedia>::create();
+    m_openMedia->show();
 }
