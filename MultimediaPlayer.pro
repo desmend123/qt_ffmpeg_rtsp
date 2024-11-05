@@ -11,15 +11,15 @@ CONFIG += c++17
 SOURCES += \
     main.cpp \
     mainwindow.cpp \
-    openmedia.cpp
+    openmediawindow.cpp
 
 HEADERS += \
     mainwindow.h \
-    openmedia.h
+    openmediawindow.h
 
 FORMS += \
     mainwindow.ui \
-    openMedia.ui
+    openmediawindow.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

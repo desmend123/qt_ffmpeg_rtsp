@@ -17,6 +17,13 @@ MainWindow::~MainWindow()
 }
 
 void MainWindow::onOpenNetStreamTriggered() {
-    m_openMedia = QSharedPointer<OpenMedia>::create();
-    m_openMedia->show();
+    m_openMediaWindow = QSharedPointer<OpenMediaWindow>::create();
+    m_openMediaWindow->resize(640, 480);
+    m_openMediaWindow->setWindowFlags(Qt::WindowStaysOnTopHint);
+    m_openMediaWindow->show();
+}
+
+void MainWindow::closeEvent(QCloseEvent *event) {
+    event->accept();
+    m_openMediaWindow->close();
 }
