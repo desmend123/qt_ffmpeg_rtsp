@@ -3,6 +3,8 @@
 
 #include <QCloseEvent>
 #include <QMainWindow>
+#include <QMediaPlayer>
+#include <QMediaPlaylist>
 
 #include "openmediawindow.h"
 
@@ -22,12 +24,17 @@ public:
 
     void closeEvent(QCloseEvent *event);
 
-private slots:
+public slots:
     void onOpenNetStreamTriggered();
+    void play(QString playUrl);
+    void play(QQueue<QString> queFile);
 
 private:
     QSharedPointer<OpenMediaWindow> m_openMediaWindow{nullptr};
 
     Ui::MainWindow *m_ui;
+
+    QSharedPointer<QMediaPlayer> m_player{};
+    QSharedPointer<QMediaPlaylist> m_mediaList{};
 };
 #endif // MAINWINDOW_H

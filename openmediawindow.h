@@ -1,8 +1,10 @@
 #ifndef OPENMEDIAWINDOW_H
 #define OPENMEDIAWINDOW_H
 
-#include <QWidget>
 #include "ui_openmediawindow.h"
+
+#include <QWidget>
+#include <QStringListModel>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -18,8 +20,22 @@ public:
     OpenMediaWindow(QWidget *parent = nullptr);
     ~OpenMediaWindow();
 
+signals:
+    void playUrlNeeded(QString playUrl);
+    void playFileNeeded(QQueue<QString> queFile);
+
+public slots:
+    void onPlayUrlPushButton();
+    void onPlayFilePushButton();
+    void onAddPushButton();
+    void onDelPushButton();
+
+
 private:
-    Ui::OpenMediaWindow* m_ui;
+    Ui::OpenMediaWindow* m_ui{nullptr};
+
+    QStringList m_fileStrList{};
+    QSharedPointer<QStringListModel> model{nullptr};
 };
 
 #endif // OPENMEDIAWINDOW_H
