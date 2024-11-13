@@ -15,6 +15,8 @@ MainWindow::MainWindow(QWidget *parent)
             SLOT(onOpenNetStreamTriggered()));
     connect(m_player.data(), SIGNAL(mediaStatusChanged(QMediaPlayer::MediaStatus)),
             this, SLOT(onMediaStatusChanged(QMediaPlayer::MediaStatus)));
+    connect(m_ui->playPauseButton, SIGNAL(clicked()), this,
+            SLOT(onPlayPauseButton()));
 
 }
 
@@ -79,4 +81,18 @@ void MainWindow::play(QQueue<QString> playQueue) {
 void MainWindow::onMediaStatusChanged(QMediaPlayer::MediaStatus status) {
     if (status == QMediaPlayer::EndOfMedia) {
     }
+}
+
+void MainWindow::onPlayPauseButton() {
+    QIcon icon;
+    if (m_player->state() == QMediaPlayer::PlayingState) {
+        m_player->pause();
+        icon.addFile(QString::fromUtf8(":/icon/play/icons/pauseplay.png"), QSize(), QIcon::Normal, QIcon::Off);
+    } else if(m_player->state() == QMediaPlayer::PausedState) {
+        m_player->play();
+        icon.addFile(QString::fromUtf8(":/icon/play/icons/playback.png"), QSize(), QIcon::Normal, QIcon::Off);
+    } else {
+        return;
+    }
+    m_ui->playPauseButton->setIcon(icon);
 }

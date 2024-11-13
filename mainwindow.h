@@ -31,6 +31,8 @@ public slots:
     void play();
     void play(QString playUrl);
     void play(QQueue<QString> playQueue);
+    void onPlayPauseButton();
+
 
 private:
     void clearMediaList();
