@@ -12,6 +12,8 @@ OpenMediaWindow::OpenMediaWindow(QWidget *parent):
 
     connect(m_ui->playUrlPushButton, SIGNAL(clicked()),
             this, SLOT(onPlayUrlPushButton()));
+    connect(m_ui->playFilePushButton, SIGNAL(clicked()),
+            this, SLOT(onPlayFilePushButton()));
     connect(m_ui->addPushButton, SIGNAL(clicked()),
             this, SLOT(onAddPushButton()));
     connect(m_ui->delPushButton, SIGNAL(clicked()),
@@ -30,19 +32,19 @@ void OpenMediaWindow::onPlayUrlPushButton() {
 
 void OpenMediaWindow::onPlayFilePushButton() {
     QAbstractItemModel *modelPtr = m_ui->fileListView->model();
-    QQueue<QString> queFile{};
+    QQueue<QString> playQueue{};
     for (int i = 0; i < modelPtr->rowCount(); ++i) {
         QModelIndex index = modelPtr->index(i, 0);
         QString itemText = modelPtr->data(index, Qt::DisplayRole).toString();
-        queFile.push_back(itemText);
+        playQueue.push_back(itemText);
     }
 
-    emit playFileNeeded(queFile);
+    emit playFileNeeded(playQueue);
 }
 
 void OpenMediaWindow::onAddPushButton() {
     QString fileName = QFileDialog::getOpenFileName(nullptr,
-        tr("Open video file"), "", tr("video") + " (*.mp4 *.avi)");
+        tr("Open video file"), "", tr("video") + " (*.mp4 *.avi *.*)");
     if(m_fileStrList.contains(fileName)) {
         QMessageBox::warning(this, tr("Warning"),
                              QString(tr("%1 is already in the list!")).arg(fileName));

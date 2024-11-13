@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QCloseEvent>
+#include <QQueue>
 #include <QMainWindow>
 #include <QMediaPlayer>
 #include <QMediaPlaylist>
@@ -26,8 +27,13 @@ public:
 
 public slots:
     void onOpenNetStreamTriggered();
+    void onMediaStatusChanged(QMediaPlayer::MediaStatus status);
+    void play();
     void play(QString playUrl);
-    void play(QQueue<QString> queFile);
+    void play(QQueue<QString> playQueue);
+
+private:
+    void clearMediaList();
 
 private:
     QSharedPointer<OpenMediaWindow> m_openMediaWindow{nullptr};

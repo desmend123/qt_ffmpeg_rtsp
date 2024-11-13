@@ -1,0 +1,12 @@
+<RCC>
+    <qresource prefix="/icon/net">
+        <file>icons/network.jpg</file>
+    </qresource>
+    <qresource prefix="/icon/play">
+        <file>icons/stopplay.png</file>
+        <file>icons/seekback.png</file>
+        <file>icons/playback.png</file>
+        <file>icons/pauseplay.png</file>
+        <file>icons/seekforward.png</file>
+    </qresource>
+</RCC>
