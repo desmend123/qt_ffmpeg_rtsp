@@ -8,5 +8,7 @@
         <file>icons/playback.png</file>
         <file>icons/pauseplay.png</file>
         <file>icons/seekforward.png</file>
+        <file>icons/voiceoff.png</file>
+        <file>icons/voiceon.png</file>
     </qresource>
 </RCC>

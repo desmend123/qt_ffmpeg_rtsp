@@ -2,10 +2,11 @@
 #define MAINWINDOW_H
 
 #include <QCloseEvent>
-#include <QQueue>
 #include <QMainWindow>
 #include <QMediaPlayer>
 #include <QMediaPlaylist>
+#include <QQueue>
+#include <QTimer>
 
 #include "openmediawindow.h"
 
@@ -32,10 +33,20 @@ public slots:
     void play(QString playUrl);
     void play(QQueue<QString> playQueue);
     void onPlayPauseButton();
-
+    void onStopPlayButton();
+    void onSeekForwardButton();
+    void onSeekBackButton();
+    void onVoiceButton();
+    void setPlayProgress();
+    void onSliderReleased();
+    void onVoiceChangeNeeded(double percent);
 
 private:
     void clearMediaList();
+    void setPlaybackIcon();
+    void setPauseIcon();
+    void setVoiceOnIcon();
+    void setVoiceOffIcon();
 
 private:
     QSharedPointer<OpenMediaWindow> m_openMediaWindow{nullptr};
@@ -44,5 +55,9 @@ private:
 
     QSharedPointer<QMediaPlayer> m_player{};
     QSharedPointer<QMediaPlaylist> m_mediaList{};
+    QSharedPointer<QTimer> playProgressTimer{};
+
+    int lastVolume{0};
+    bool isVoiceOff{false};
 };
 #endif // MAINWINDOW_H
