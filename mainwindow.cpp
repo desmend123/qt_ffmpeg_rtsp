@@ -165,6 +165,7 @@ void MainWindow::onStopPlayButton() {
     setPlaybackIcon();
     m_ui->playTimeLabel->setText("00:00");
     m_ui->remainTImeLabel->setText("00:00");
+    m_ui->playSlider->setValue(0);
 }
 
 void MainWindow::onSeekForwardButton() {
