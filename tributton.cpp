@@ -36,8 +36,7 @@ void TriangleButton::setBrushRange(const QPoint& mousePoint) {
     int xMax = this->width();
     int yMax = this->height();
     triangle.setPoint(1, mousePoint.x(),
-        // 1000 / 980 in order to correct factor
-        m_triangle.point(0).y()  * 1000 / 980 - mousePoint.x() * yMax / xMax);
+        m_triangle.point(0).y() - mousePoint.x() * yMax / xMax);
     triangle.setPoint(2, mousePoint.x(), m_triangle.point(0).y());
 
     painter.setBrush(m_color);
