@@ -99,7 +99,7 @@ void MainWindow::play(QQueue<QString> playQueue) {
     clearMediaList();
     while (!playQueue.empty()) {
         QString playStr = playQueue.front();
-        m_mediaList->addMedia(QUrl(playStr));
+        m_mediaList->addMedia(QUrl::fromUserInput(playStr));
         playQueue.pop_front();
     }
     playProgressTimer->start(CHECK_PLAY_TIME);
