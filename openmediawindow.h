@@ -29,6 +29,7 @@ public slots:
     void onPlayFilePushButton();
     void onAddPushButton();
     void onDelPushButton();
+    void onCancelUrlPushButton();
 
 
 private:

@@ -3,6 +3,7 @@
 
 #include <QQueue>
 #include <QTime>
+#include <QWindow>
 
 const int SKIP_TIME = 15000; // unit is ms
 const int CHECK_PLAY_TIME = 1000; // unit is ms
@@ -49,9 +50,10 @@ MainWindow::~MainWindow()
 
 void MainWindow::onOpenNetStreamTriggered() {
     if (m_openMediaWindow == nullptr) {
-        m_openMediaWindow = QSharedPointer<OpenMediaWindow>::create();
+        m_openMediaWindow = QSharedPointer<OpenMediaWindow>::create(this);
         m_openMediaWindow->resize(640, 480);
-        m_openMediaWindow->setWindowFlags(Qt::WindowStaysOnTopHint);
+        m_openMediaWindow->setWindowFlags(Qt::Tool | Qt::BypassWindowManagerHint);
+        //m_openMediaWindow->exec();
         m_openMediaWindow->show();
 
         connect(m_openMediaWindow.data(), SIGNAL(playUrlNeeded(QString)),
@@ -91,7 +93,7 @@ void MainWindow::play() {
 
 void MainWindow::play(QString playUrl) {
     clearMediaList();
-    m_mediaList->addMedia(QUrl(playUrl));
+    m_mediaList->addMedia(QUrl::fromUserInput(playUrl));
     play();
 }
 

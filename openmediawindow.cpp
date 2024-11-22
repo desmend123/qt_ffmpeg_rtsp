@@ -12,6 +12,8 @@ OpenMediaWindow::OpenMediaWindow(QWidget *parent):
 
     connect(m_ui->playUrlPushButton, SIGNAL(clicked()),
             this, SLOT(onPlayUrlPushButton()));
+    connect(m_ui->cancelUrlPushButton, SIGNAL(clicked()),
+            this, SLOT(onCancelUrlPushButton()));
     connect(m_ui->playFilePushButton, SIGNAL(clicked()),
             this, SLOT(onPlayFilePushButton()));
     connect(m_ui->addPushButton, SIGNAL(clicked()),
@@ -28,6 +30,10 @@ OpenMediaWindow::~OpenMediaWindow()
 void OpenMediaWindow::onPlayUrlPushButton() {
     QString playUrl = m_ui->comboBox->currentText();
     emit playUrlNeeded(playUrl);
+}
+
+void OpenMediaWindow::onCancelUrlPushButton() {
+    close();
 }
 
 void OpenMediaWindow::onPlayFilePushButton() {
