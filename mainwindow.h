@@ -29,7 +29,6 @@ public:
 public slots:
     void onOpenNetStreamTriggered();
     void onMediaStatusChanged(QMediaPlayer::MediaStatus status);
-    void play();
     void play(QString playUrl);
     void play(QQueue<QString> playQueue);
     void onPlayPauseButton();
@@ -42,6 +41,7 @@ public slots:
     void onVoiceChangeNeeded(double percent);
 
 private:
+    void play();
     void clearMediaList();
     void setPlaybackIcon();
     void setPauseIcon();

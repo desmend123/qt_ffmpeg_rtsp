@@ -20,6 +20,11 @@ public:
     OpenMediaWindow(QWidget *parent = nullptr);
     ~OpenMediaWindow();
 
+private:
+    void loadSettings();
+    void saveUrlSettings();
+    void saveFilePathSettings();
+
 signals:
     void playUrlNeeded(QString playUrl);
     void playFileNeeded(QQueue<QString> queFile);
@@ -30,6 +35,7 @@ public slots:
     void onAddPushButton();
     void onDelPushButton();
     void onCancelUrlPushButton();
+    void onCancelFilePushButton();
 
 
 private:
@@ -37,6 +43,9 @@ private:
 
     QStringList m_fileStrList{};
     QSharedPointer<QStringListModel> model{nullptr};
+
+    QString m_playUrl{};
+    QString m_playFilePath{};
 };
 
 #endif // OPENMEDIAWINDOW_H

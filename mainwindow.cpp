@@ -53,7 +53,6 @@ void MainWindow::onOpenNetStreamTriggered() {
         m_openMediaWindow = QSharedPointer<OpenMediaWindow>::create(this);
         m_openMediaWindow->resize(640, 480);
         m_openMediaWindow->setWindowFlags(Qt::Tool | Qt::BypassWindowManagerHint);
-        //m_openMediaWindow->exec();
         m_openMediaWindow->show();
 
         connect(m_openMediaWindow.data(), SIGNAL(playUrlNeeded(QString)),
@@ -82,17 +81,22 @@ void MainWindow::play() {
     if(m_mediaList->isEmpty()) {
         return;
     }
+    if (!m_player->isAvailable()) {
+        return;
+    }
     m_player->setPlaylist(m_mediaList.data());
     m_player->setVideoOutput(m_ui->videoWidget);
     m_ui->videoWidget->show();
     m_player->play();
     m_openMediaWindow->hide();
-
     setPauseIcon();
 }
 
 void MainWindow::play(QString playUrl) {
     clearMediaList();
+    if (playUrl.isEmpty()) {
+        return;
+    }
     m_mediaList->addMedia(QUrl::fromUserInput(playUrl));
     play();
 }
