@@ -58,10 +58,9 @@ void MainWindow::onOpenNetStreamTriggered() {
         for (; i <= screens.size() - 1; i++) {
             QRect geometry = screens[i]->geometry();
 
-            // Dividing by 3 is to center the window when set normalScreen
             int x = geometry.x() + geometry.width() / 4;
-            int y = geometry.y() + geometry.height() / 4;
-            m_openMediaWindow->setGeometry(x, y, geometry.width() / 2, geometry.height() / 2);
+            int y = geometry.y() + geometry.height() / 5;
+            m_openMediaWindow->setGeometry(x, y, geometry.width() / 2, geometry.height() * 3 / 5);
             break;
         }
 
