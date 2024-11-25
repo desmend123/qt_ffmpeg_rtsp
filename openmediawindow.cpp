@@ -93,6 +93,9 @@ void OpenMediaWindow::onAddPushButton() {
     QString fileName = QFileDialog::getOpenFileName(nullptr,
         tr("Open video file"), m_playFilePath, tr("video") +
         " (*.mp4 *.avi *.*)");
+    if (fileName.isEmpty()) {
+        return;
+    }
 
     m_playFilePath  = fileName;
     saveFilePathSettings();

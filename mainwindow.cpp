@@ -2,6 +2,7 @@
 #include "ui_mainwindow.h"
 
 #include <QQueue>
+#include <QScreen>
 #include <QTime>
 #include <QWindow>
 
@@ -51,8 +52,20 @@ MainWindow::~MainWindow()
 void MainWindow::onOpenNetStreamTriggered() {
     if (m_openMediaWindow == nullptr) {
         m_openMediaWindow = QSharedPointer<OpenMediaWindow>::create(this);
-        m_openMediaWindow->resize(640, 480);
-        m_openMediaWindow->setWindowFlags(Qt::Tool | Qt::BypassWindowManagerHint);
+
+        QList<QScreen*> screens = QApplication::screens();
+        int i = 0;
+        for (; i <= screens.size() - 1; i++) {
+            QRect geometry = screens[i]->geometry();
+
+            // Dividing by 3 is to center the window when set normalScreen
+            int x = geometry.x() + geometry.width() / 4;
+            int y = geometry.y() + geometry.height() / 4;
+            m_openMediaWindow->setGeometry(x, y, geometry.width() / 2, geometry.height() / 2);
+            break;
+        }
+
+        m_openMediaWindow->setWindowFlags(Qt::Tool);
         m_openMediaWindow->show();
 
         connect(m_openMediaWindow.data(), SIGNAL(playUrlNeeded(QString)),
