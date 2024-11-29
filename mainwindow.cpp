@@ -19,6 +19,7 @@ MainWindow::MainWindow(QWidget *parent)
     m_ui->playSlider->setMaximum(SLIDER_MAX_VALUE);
     m_player = QSharedPointer<QMediaPlayer>::create();
     m_mediaList = QSharedPointer<QMediaPlaylist>::create();
+    setAppIcon();
 
     connect(m_ui->openNetStream, SIGNAL(triggered()), this,
             SLOT(onOpenNetStreamTriggered()));
@@ -122,6 +123,12 @@ void MainWindow::play(QQueue<QString> playQueue) {
     }
     playProgressTimer->start(CHECK_PLAY_TIME);
     play();
+}
+
+void MainWindow::setAppIcon() {
+    QIcon icon;
+    icon.addFile(QString::fromUtf8(":/icon/app/icons/appicon.png"), QSize(), QIcon::Normal, QIcon::Off);
+    setWindowIcon(icon);
 }
 
 void MainWindow::setPlaybackIcon() {

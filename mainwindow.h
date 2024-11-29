@@ -43,6 +43,8 @@ public slots:
 private:
     void play();
     void clearMediaList();
+
+    void setAppIcon();
     void setPlaybackIcon();
     void setPauseIcon();
     void setVoiceOnIcon();
