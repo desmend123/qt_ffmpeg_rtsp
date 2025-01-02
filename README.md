@@ -1,1 +1,1 @@
-Play RTSP with gstreamer
+Play RTSP with Qt and gstreamer 
