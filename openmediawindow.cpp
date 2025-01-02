@@ -18,14 +18,6 @@ OpenMediaWindow::OpenMediaWindow(QWidget *parent):
             this, SLOT(onPlayUrlPushButton()));
     connect(m_ui->cancelUrlPushButton, SIGNAL(clicked()),
             this, SLOT(onCancelUrlPushButton()));
-    connect(m_ui->cancelFilePushButton, SIGNAL(clicked()),
-            this, SLOT(onCancelFilePushButton()));
-    connect(m_ui->playFilePushButton, SIGNAL(clicked()),
-            this, SLOT(onPlayFilePushButton()));
-    connect(m_ui->addPushButton, SIGNAL(clicked()),
-            this, SLOT(onAddPushButton()));
-    connect(m_ui->delPushButton, SIGNAL(clicked()),
-            this, SLOT(onDelPushButton()));
 }
 
 OpenMediaWindow::~OpenMediaWindow()
@@ -68,57 +60,4 @@ void OpenMediaWindow::onPlayUrlPushButton() {
 
 void OpenMediaWindow::onCancelUrlPushButton() {
     close();
-}
-
-void OpenMediaWindow::onCancelFilePushButton() {
-    close();
-}
-
-void OpenMediaWindow::onPlayFilePushButton() {
-    QAbstractItemModel *modelPtr = m_ui->fileListView->model();
-    if (!modelPtr) {
-        return;
-    }
-    QQueue<QString> playQueue{};
-    for (int i = 0; i < modelPtr->rowCount(); ++i) {
-        QModelIndex index = modelPtr->index(i, 0);
-        QString itemText = modelPtr->data(index, Qt::DisplayRole).toString();
-        playQueue.push_back(itemText);
-    }
-
-    emit playFileNeeded(playQueue);
-}
-
-void OpenMediaWindow::onAddPushButton() {
-    QString fileName = QFileDialog::getOpenFileName(nullptr,
-        tr("Open video file"), m_playFilePath, tr("video") +
-        " (*.mp4 *.avi *.*)");
-    if (fileName.isEmpty()) {
-        return;
-    }
-
-    m_playFilePath  = fileName;
-    saveFilePathSettings();
-
-    if(m_fileStrList.contains(fileName)) {
-        QMessageBox::warning(this, tr("Warning"),
-            QString(tr("%1 is already in the list!")).arg(fileName));
-        return;
-    }
-    m_fileStrList.append(fileName);
-    model = QSharedPointer<QStringListModel>::create(m_fileStrList);
-    m_ui->fileListView->setModel(model.data());
-    m_ui->fileListView->show();
-}
-
-void OpenMediaWindow::onDelPushButton() {
-    QModelIndexList selected = m_ui->fileListView->selectionModel()->selectedIndexes();
-    for (int i = 0; i < selected.size(); ++i) {
-        QModelIndex index = selected.at(i);
-        QString str = index.data().toString();
-        m_fileStrList.removeOne(str);
-    }
-    model->setStringList(m_fileStrList);
-    m_ui->fileListView->setModel(model.data());
-    m_ui->fileListView->show();
 }

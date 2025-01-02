@@ -2,13 +2,18 @@
 #define MAINWINDOW_H
 
 #include <QCloseEvent>
+#include <QGraphicsScene>
+#include <QGraphicsPixmapItem>
+#include <QImage>
 #include <QMainWindow>
 #include <QMediaPlayer>
 #include <QMediaPlaylist>
+#include <QMutex>
 #include <QQueue>
 #include <QTimer>
 
 #include "openmediawindow.h"
+#include "videoprocessor.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -26,40 +31,27 @@ public:
 
     void closeEvent(QCloseEvent *event);
 
+public:
+    static int busProcess(GstData data, const QString prefix);
+
 public slots:
     void onOpenNetStreamTriggered();
-    void onMediaStatusChanged(QMediaPlayer::MediaStatus status);
-    void play(QString playUrl);
-    void play(QQueue<QString> playQueue);
-    void onPlayPauseButton();
-    void onStopPlayButton();
-    void onSeekForwardButton();
-    void onSeekBackButton();
-    void onVoiceButton();
-    void setPlayProgress();
-    void onSliderReleased();
-    void onVoiceChangeNeeded(double percent);
+    void play(const QString& playUrl);
+    void onInDisplay(QImage image);
 
 private:
     void play();
-    void clearMediaList();
 
     void setAppIcon();
-    void setPlaybackIcon();
-    void setPauseIcon();
-    void setVoiceOnIcon();
-    void setVoiceOffIcon();
 
 private:
     QSharedPointer<OpenMediaWindow> m_openMediaWindow{nullptr};
-
     Ui::MainWindow *m_ui;
 
-    QSharedPointer<QMediaPlayer> m_player{};
-    QSharedPointer<QMediaPlaylist> m_mediaList{};
-    QSharedPointer<QTimer> playProgressTimer{};
+    QSharedPointer<VideoProcessor> m_videoProcessor{};
 
-    int lastVolume{0};
-    bool isVoiceOff{false};
+    QPixmap pixmap{};
+    QSharedPointer<QGraphicsPixmapItem> m_GraphicItem{};
+    QGraphicsScene* m_scene{};
 };
 #endif // MAINWINDOW_H

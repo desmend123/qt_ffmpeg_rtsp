@@ -3,51 +3,43 @@
 
 #include <QQueue>
 #include <QScreen>
+#include <QThread>
 #include <QTime>
 #include <QWindow>
 
-const int SKIP_TIME = 15000; // unit is ms
-const int CHECK_PLAY_TIME = 1000; // unit is ms
-const double SLIDER_MAX_VALUE = 1000000;
-
-MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent)
-    , m_ui(new Ui::MainWindow)
+MainWindow::MainWindow(QWidget *parent) :
+    QMainWindow(parent),
+    m_ui(new Ui::MainWindow)
 {
     m_ui->setupUi(this);
-    m_ui->playSlider->setMinimum(0);
-    m_ui->playSlider->setMaximum(SLIDER_MAX_VALUE);
-    m_player = QSharedPointer<QMediaPlayer>::create();
-    m_mediaList = QSharedPointer<QMediaPlaylist>::create();
     setAppIcon();
+    m_ui->graphicsView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    m_ui->graphicsView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+
+    m_scene = new QGraphicsScene();
+    m_ui->graphicsView->setScene(m_scene);
+
+    m_videoProcessor = QSharedPointer<VideoProcessor>::create();
+
+    m_videoProcessor->moveToThread(new QThread(this));
+
+    connect(m_videoProcessor->thread(), SIGNAL(started()),
+            m_videoProcessor.data(), SLOT(startVideo()));
+    connect(m_videoProcessor.data(), SIGNAL(inDisplay(QImage)),
+            this, SLOT(onInDisplay(QImage)));
+
 
     connect(m_ui->openNetStream, SIGNAL(triggered()), this,
             SLOT(onOpenNetStreamTriggered()));
-    connect(m_player.data(), SIGNAL(mediaStatusChanged(QMediaPlayer::MediaStatus)),
-            this, SLOT(onMediaStatusChanged(QMediaPlayer::MediaStatus)));
-    connect(m_ui->playPauseButton, SIGNAL(clicked()), this,
-            SLOT(onPlayPauseButton()));
-    connect(m_ui->stopPlayButton, SIGNAL(clicked()), this,
-                SLOT(onStopPlayButton()));
-    connect(m_ui->seekForwardButton, SIGNAL(clicked()), this,
-            SLOT(onSeekForwardButton()));
-    connect(m_ui->seekBackButton, SIGNAL(clicked()), this,
-            SLOT(onSeekBackButton()));
-    connect(m_ui->voiceButton, SIGNAL(clicked()), this,
-            SLOT(onVoiceButton()));
-    connect(m_ui->voiceRangeButton, SIGNAL(voiceChangeNeeded(double)), this,
-            SLOT(onVoiceChangeNeeded(double)));
-    connect(m_ui->playSlider, SIGNAL(sliderReleased()), this,
-            SLOT(onSliderReleased()));
-
-    playProgressTimer = QSharedPointer<QTimer>::create();
-    connect(playProgressTimer.data(), SIGNAL(timeout()), this,
-            SLOT(setPlayProgress()));
+    onOpenNetStreamTriggered();
 }
 
 MainWindow::~MainWindow()
 {
     delete m_ui;
+
+    m_scene->removeItem(m_GraphicItem.data());
+    delete m_scene;
 }
 
 void MainWindow::onOpenNetStreamTriggered() {
@@ -70,8 +62,6 @@ void MainWindow::onOpenNetStreamTriggered() {
 
         connect(m_openMediaWindow.data(), SIGNAL(playUrlNeeded(QString)),
             this, SLOT(play(QString)));
-        connect(m_openMediaWindow.data(), SIGNAL(playFileNeeded(QQueue<QString>)),
-            this, SLOT(play(QQueue<QString>)));
     } else {
         m_openMediaWindow->show();
     }
@@ -80,48 +70,99 @@ void MainWindow::onOpenNetStreamTriggered() {
 void MainWindow::closeEvent(QCloseEvent *event) {
     event->accept();
     m_openMediaWindow->close();
+
+    m_videoProcessor->setCloseFlag(true);
+    m_videoProcessor->thread()->quit();
+    m_videoProcessor->thread()->wait();
 }
 
-void MainWindow::clearMediaList() {
-    int count = m_mediaList->mediaCount();
-    if (count != 0) {
-        m_mediaList->removeMedia(0, count);
+static bool busProcessMsg(GstElement *pipeline, GstMessage *msg, const QString &prefix) {
+    using namespace std;
+
+    GstMessageType mType = GST_MESSAGE_TYPE(msg);
+    // qDebug() << "[" << prefix << "] : mType = " << mType << " ";
+    switch (mType) {
+    case (GST_MESSAGE_ERROR):
+        // Parse error and exit program, hard exit
+        GError *err;
+        gchar *dbg;
+        gst_message_parse_error(msg, &err, &dbg);
+        qDebug() << "ERR = " << err->message << " FROM " << GST_OBJECT_NAME(msg->src);
+        qDebug() << "DBG = " << dbg;
+        g_clear_error(&err);
+        g_free(dbg);
+        exit(1);
+    case (GST_MESSAGE_EOS) :
+        // Soft exit on EOS
+        qDebug() << " EOS !";
+        return false;
+    case (GST_MESSAGE_STATE_CHANGED):
+        // Parse state change, print extra info for pipeline only
+        // qDebug() << "State changed !";
+        if (GST_MESSAGE_SRC(msg) == GST_OBJECT(pipeline)) {
+            GstState sOld, sNew, sPenging;
+            gst_message_parse_state_changed(msg, &sOld, &sNew, &sPenging);
+            qDebug() << "Pipeline changed from " << gst_element_state_get_name(sOld) << " to " <<
+                gst_element_state_get_name(sNew);
+        }
+        break;
+    case (GST_MESSAGE_STEP_START):
+        // qDebug() << "STEP START !";
+        break;
+    case (GST_MESSAGE_STREAM_STATUS):
+        // qDebug() << "STREAM STATUS !";
+        break;
+    case (GST_MESSAGE_ELEMENT):
+        // qDebug() << "MESSAGE ELEMENT !";
+        break;
+
+        // You can add more stuff here if you want
+
+    default:
+        // qDebug() << '\n';
+        break;
     }
+    return true;
 }
+
+int MainWindow::busProcess(GstData data, const QString prefix) {
+    GstBus *bus = gst_element_get_bus(data.pipeline);
+
+    int res;
+    while (true) {
+        GstMessage *msg = gst_bus_timed_pop(bus, GST_CLOCK_TIME_NONE);
+        if (msg == nullptr) {
+            qDebug() << "Msg is nullptr!";
+            return -1;
+        }
+        res = busProcessMsg(data.pipeline, msg, prefix);
+        gst_message_unref(msg);
+        if (!res)
+            break;
+    }
+    gst_object_unref(bus);
+    qDebug() << "BUS THREAD FINISHED : " << prefix;
+    return 0;
+}
+
 
 
 void MainWindow::play() {
-    if(m_mediaList->isEmpty()) {
-        return;
+    if (m_videoProcessor->thread()->isRunning()) {
+        m_videoProcessor->thread()->quit();
     }
-    if (!m_player->isAvailable()) {
-        return;
+    m_videoProcessor->gstHandle();
+    m_videoProcessor->thread()->start();
+    if (m_openMediaWindow != nullptr) {
+        m_openMediaWindow->hide();
     }
-    m_player->setPlaylist(m_mediaList.data());
-    m_player->setVideoOutput(m_ui->videoWidget);
-    m_ui->videoWidget->show();
-    m_player->play();
-    m_openMediaWindow->hide();
-    setPauseIcon();
 }
 
-void MainWindow::play(QString playUrl) {
-    clearMediaList();
+void MainWindow::play(const QString& playUrl) {
     if (playUrl.isEmpty()) {
         return;
     }
-    m_mediaList->addMedia(QUrl::fromUserInput(playUrl));
-    play();
-}
-
-void MainWindow::play(QQueue<QString> playQueue) {
-    clearMediaList();
-    while (!playQueue.empty()) {
-        QString playStr = playQueue.front();
-        m_mediaList->addMedia(QUrl::fromUserInput(playStr));
-        playQueue.pop_front();
-    }
-    playProgressTimer->start(CHECK_PLAY_TIME);
+    m_videoProcessor->setPlayUrl(playUrl);
     play();
 }
 
@@ -131,131 +172,13 @@ void MainWindow::setAppIcon() {
     setWindowIcon(icon);
 }
 
-void MainWindow::setPlaybackIcon() {
-    QIcon icon;
-    icon.addFile(QString::fromUtf8(":/icon/play/icons/playback.png"), QSize(), QIcon::Normal, QIcon::Off);
-    m_ui->playPauseButton->setIcon(icon);
-}
-
-void MainWindow::setPauseIcon() {
-    QIcon icon;
-    icon.addFile(QString::fromUtf8(":/icon/play/icons/pauseplay.png"), QSize(), QIcon::Normal, QIcon::Off);
-    m_ui->playPauseButton->setIcon(icon);
-}
-
-void MainWindow::setVoiceOnIcon() {
-    QIcon icon;
-    icon.addFile(QString::fromUtf8(":/icon/play/icons/voiceon.png"), QSize(), QIcon::Normal, QIcon::Off);
-    m_ui->voiceButton->setIcon(icon);
-}
-
-void MainWindow::setVoiceOffIcon() {
-    QIcon icon;
-    icon.addFile(QString::fromUtf8(":/icon/play/icons/voiceoff.png"), QSize(), QIcon::Normal, QIcon::Off);
-    m_ui->voiceButton->setIcon(icon);
-}
-
-void MainWindow::onMediaStatusChanged(QMediaPlayer::MediaStatus status) {
-    if (status == QMediaPlayer::EndOfMedia) {
-        setPlaybackIcon();
-        playProgressTimer->stop();
-        m_ui->playTimeLabel->setText("00:00");
-        m_ui->remainTImeLabel->setText("00:00");
-        m_ui->playSlider->setValue(0);
-    } else {
-
-    }
-}
-
-void MainWindow::onPlayPauseButton() {
-    if (m_player->state() == QMediaPlayer::PlayingState) {
-        m_player->pause();
-        playProgressTimer->stop();
-        setPlaybackIcon();
-    } else if(m_player->state() == QMediaPlayer::PausedState) {
-        m_player->play();
-        playProgressTimer->start();
-        setPauseIcon();
-    } else if(m_player->state() == QMediaPlayer::StoppedState) {
-        play();
-        playProgressTimer->start();
-    }else {
-        return;
-    }
-}
-
-void MainWindow::onStopPlayButton() {
-    m_player->stop();
-    playProgressTimer->stop();
-    setPlaybackIcon();
-    m_ui->playTimeLabel->setText("00:00");
-    m_ui->remainTImeLabel->setText("00:00");
-    m_ui->playSlider->setValue(0);
-}
-
-void MainWindow::onSeekForwardButton() {
-    int position = m_player->position();
-    int duration = m_player->duration();
-    if (duration != 0) {
-        m_player->setPosition(position + SKIP_TIME);
-    }
-}
-
-void MainWindow::onSeekBackButton() {
-    int position = m_player->position();
-    int duration = m_player->duration();
-    if (duration != 0) {
-        m_player->setPosition(position - SKIP_TIME);
-    }
-}
-
-void MainWindow::setPlayProgress() {
-    int position = m_player->position();
-
-    QTime time = QTime::fromMSecsSinceStartOfDay(position);
-    QString str = time.toString("mm:ss");
-    m_ui->playTimeLabel->setText(str);
-
-    int duration = m_player->duration();
-    if (duration != 0) {
-        time = QTime::fromMSecsSinceStartOfDay(duration - position);
-        str = time.toString("mm:ss");
-        m_ui->remainTImeLabel->setText(str);
-
-        double sliderVal = (position * SLIDER_MAX_VALUE) / duration;
-        m_ui->playSlider->setValue(sliderVal);
-    } else {
-        m_ui->playSlider->setValue(0);
-        m_ui->remainTImeLabel->setText("00:00");
-    }
-}
-
-void MainWindow::onSliderReleased() {
-    int value = m_ui->playSlider->value();
-    int duration = m_player->duration();
-    if(duration == 0) {
-        return;
-    }
-    double position = value/ SLIDER_MAX_VALUE * duration;
-    m_player->setPosition(position);
-}
-
-void MainWindow::onVoiceButton() {
-    if (isVoiceOff) {
-        m_player->setVolume(lastVolume);
-        setVoiceOnIcon();
-        isVoiceOff = false;
-        m_ui->voiceRangeButton->setColor(Qt::green);
-    } else {
-        lastVolume = m_player->volume();
-        m_player->setVolume(0);
-        setVoiceOffIcon();
-        isVoiceOff = true;
-        m_ui->voiceRangeButton->setColor(Qt::gray);
-    }
-}
-
-void MainWindow::onVoiceChangeNeeded(double percent) {
-    double volume = percent * 100;
-    m_player->setVolume(volume);
+void MainWindow::onInDisplay(QImage image) {
+    pixmap = QPixmap::fromImage(image);
+    m_GraphicItem =
+        QSharedPointer<QGraphicsPixmapItem>::create(pixmap);
+    double viewWidth = m_ui->graphicsView->width();
+    double viewHeight = m_ui->graphicsView->height();
+    m_GraphicItem->setScale(viewWidth / pixmap.width());
+    m_GraphicItem->setScale(viewHeight / pixmap.height());
+    m_scene->addItem(m_GraphicItem.data());
 }

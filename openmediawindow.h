@@ -27,16 +27,10 @@ private:
 
 signals:
     void playUrlNeeded(QString playUrl);
-    void playFileNeeded(QQueue<QString> queFile);
 
 public slots:
     void onPlayUrlPushButton();
-    void onPlayFilePushButton();
-    void onAddPushButton();
-    void onDelPushButton();
     void onCancelUrlPushButton();
-    void onCancelFilePushButton();
-
 
 private:
     Ui::OpenMediaWindow* m_ui{nullptr};
