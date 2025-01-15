@@ -1,1 +1,1 @@
-Play RTSP with Qt and gstreamer 
+Play RTSP with Qt and ffmpeg
