@@ -15,8 +15,8 @@
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout">
-    <item row="0" column="0" rowspan="2" colspan="2">
-     <widget class="QGraphicsView" name="graphicsView"/>
+    <item row="0" column="0">
+     <widget class="ZPlayWidget" name="playWidget" native="true"/>
     </item>
    </layout>
   </widget>
@@ -40,7 +40,7 @@
   <widget class="QStatusBar" name="statusbar"/>
   <action name="openNetStream">
    <property name="icon">
-    <iconset resource="res.qrc">
+    <iconset>
      <normaloff>:/icon/net/icons/network.jpg</normaloff>:/icon/net/icons/network.jpg</iconset>
    </property>
    <property name="text">
@@ -48,8 +48,14 @@
    </property>
   </action>
  </widget>
- <resources>
-  <include location="res.qrc"/>
- </resources>
+ <customwidgets>
+  <customwidget>
+   <class>ZPlayWidget</class>
+   <extends>QWidget</extends>
+   <header location="global">ZPlayWidget.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
+ <resources/>
  <connections/>
 </ui>
